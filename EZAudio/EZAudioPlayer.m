@@ -271,7 +271,8 @@ NSString * const EZAudioPlayerDidSeekNotification = @"EZAudioPlayerDidSeekNotifi
     _audioFile = [audioFile copy];
     _audioFile.delegate = self;
     AudioStreamBasicDescription inputFormat = _audioFile.clientFormat;
-    [self.output setInputFormat:inputFormat];
+    assert(false);
+//    [self.output setInputFormat:inputFormat];
     [[NSNotificationCenter defaultCenter] postNotificationName:EZAudioPlayerDidChangeAudioFileNotification
                                                         object:self];
 }
@@ -297,7 +298,7 @@ NSString * const EZAudioPlayerDidSeekNotification = @"EZAudioPlayerDidSeekNotifi
 - (void)setOutput:(EZOutput *)output
 {
     _output = output;
-    _output.dataSource = self;
+    assert(false);
     _output.delegate = self;
 }
 

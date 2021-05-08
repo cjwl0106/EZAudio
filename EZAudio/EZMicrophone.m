@@ -557,8 +557,7 @@ static OSStatus EZAudioMicrophoneCallback(void                       *inRefCon,
 - (void)setOutput:(EZOutput *)output
 {
     _output = output;
-    _output.inputFormat = self.audioStreamBasicDescription;
-    _output.dataSource = self;
+    [_output addDataSource:self withFormat:self.audioStreamBasicDescription];
 }
 
 //------------------------------------------------------------------------------
