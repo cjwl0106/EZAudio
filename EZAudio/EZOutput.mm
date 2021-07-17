@@ -189,6 +189,35 @@ typedef std::map<EZBusID, DataSourceNode> DataSources;
     return output;
 }
 
+-(Float64)sampleRate
+{
+#if TARGET_OS_IPHONE
+	AVAudioSession *audioSession = [AVAudioSession sharedInstance];
+	return [audioSession sampleRate];
+#elif TARGET_OS_MAC
+	
+	AudioObjectPropertyAddress nominal_sample_rate_address = {
+		kAudioDevicePropertyNominalSampleRate,
+		kAudioObjectPropertyScopeGlobal,
+		kAudioObjectPropertyElementMaster
+	};
+  
+	Float64 nominal_sample_rate;
+	UInt32 info_size = sizeof(nominal_sample_rate);
+	AudioDeviceID deviceID = self.device.deviceID;
+
+	[EZAudioUtilities checkResult:AudioObjectGetPropertyData(deviceID,
+                                   &nominal_sample_rate_address,
+                                   0,
+                                   NULL,
+                                   &info_size,
+                                   &nominal_sample_rate)
+            operation:"Couldn't get sample rate count"];
+
+	return nominal_sample_rate;
+#endif
+}
+
 //------------------------------------------------------------------------------
 #pragma mark - Setup
 //------------------------------------------------------------------------------
@@ -280,7 +309,18 @@ typedef std::map<EZBusID, DataSourceNode> DataSources;
     //
     self.info = (EZOutputInfo *)malloc(sizeof(EZOutputInfo));
     memset(self.info, 0, sizeof(EZOutputInfo));
-    
+
+    //
+    // Use the default device
+    //
+	EZAudioDevice *currentOutputDevice = [EZAudioDevice currentOutputDevice];
+	[self setDevice_:currentOutputDevice];
+	
+	//
+	//
+	//
+
+
     //
     // Setup the audio graph
     //
@@ -350,13 +390,8 @@ typedef std::map<EZBusID, DataSourceNode> DataSources;
     //
     // Set stream formats
     //
-    [self setClientFormat:[self defaultClientFormat]];
-    
-    //
-    // Use the default device
-    //
-    EZAudioDevice *currentOutputDevice = [EZAudioDevice currentOutputDevice];
-    [self setDevice:currentOutputDevice];
+    [self setClientFormat:[self clientFormatWithSampleRate:self.sampleRate]];
+    [self onSetDevice];
     
     //
     // Set maximum frames per slice to 4096 to allow playback during
@@ -541,13 +576,22 @@ typedef std::map<EZBusID, DataSourceNode> DataSources;
 
 - (void)setDevice:(EZAudioDevice *)device
 {
-#if TARGET_OS_IPHONE
-    
+	[self setDevice_:device];
+	[self onSetDevice];
+}
+
+- (void)setDevice_:(EZAudioDevice *)device
+{
     // if the devices are equal then ignore
     if ([device isEqual:self.device])
     {
         return;
     }
+
+    // store device
+    _device = device;
+    
+#if TARGET_OS_IPHONE
     
     NSError *error;
     [[AVAudioSession sharedInstance] setOutputDataSource:device.dataSource error:&error];
@@ -557,14 +601,18 @@ typedef std::map<EZBusID, DataSourceNode> DataSources;
               device.dataSource,
               error.localizedDescription);
     }
-    
+#endif
+}
+
+- (void)onSetDevice
+{
+#if TARGET_OS_IPHONE
+
 #elif TARGET_OS_MAC
-    UInt32 outputEnabled = device.outputChannelCount > 0;
+    UInt32 outputEnabled = self.device.outputChannelCount > 0;
     NSAssert(outputEnabled, @"Selected EZAudioDevice does not have any output channels");
     if ([self outputAudioUnitSubType] == kAudioUnitSubType_HALOutput)
     {
-//    NSAssert([self outputAudioUnitSubType] == kAudioUnitSubType_HALOutput,
-//             @"Audio device selection on OSX is only available when using the kAudioUnitSubType_HALOutput output unit subtype");
     [EZAudioUtilities checkResult:AudioUnitSetProperty(self.info->outputNodeInfo.audioUnit,
                                                        kAudioOutputUnitProperty_EnableIO,
                                                        kAudioUnitScope_Output,
@@ -573,7 +621,7 @@ typedef std::map<EZBusID, DataSourceNode> DataSources;
                                                        sizeof(outputEnabled))
                         operation:"Failed to set flag on device output"];
     
-    AudioDeviceID deviceId = device.deviceID;
+    AudioDeviceID deviceId = self.device.deviceID;
     [EZAudioUtilities checkResult:AudioUnitSetProperty(self.info->outputNodeInfo.audioUnit,
                                                        kAudioOutputUnitProperty_CurrentDevice,
                                                        kAudioUnitScope_Global,
@@ -584,13 +632,10 @@ typedef std::map<EZBusID, DataSourceNode> DataSources;
 	}
 #endif
     
-    // store device
-    _device = device;
-    
     // notify delegate
     if ([self.delegate respondsToSelector:@selector(output:changedDevice:)])
     {
-        [self.delegate output:self changedDevice:device];
+        [self.delegate output:self changedDevice:self.device];
     }
 }
 
@@ -679,18 +724,9 @@ typedef std::map<EZBusID, DataSourceNode> DataSources;
 
 //------------------------------------------------------------------------------
 
-+ (Float64)defaultClientFormatSampleRate
+- (AudioStreamBasicDescription)clientFormatWithSampleRate:(Float64)sampleRate
 {
-#if TARGET_OS_IPHONE
-    return 48000;
-#elif TARGET_OS_MAC
-    return 44100;
-#endif
-}
-
-- (AudioStreamBasicDescription)defaultClientFormat
-{
-    return [EZAudioUtilities stereoFloatNonInterleavedFormatWithSampleRate:EZOutput.defaultClientFormatSampleRate];
+    return [EZAudioUtilities stereoFloatNonInterleavedFormatWithSampleRate:sampleRate];
 }
 
 

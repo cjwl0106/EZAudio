@@ -331,16 +331,6 @@ typedef UInt32 EZBusID;
 //------------------------------------------------------------------------------
 
 /**
- The default AudioStreamBasicDescription set as the client format of the output if no custom `clientFormat` is set. Defaults to a 44.1 kHz stereo, non-interleaved, float format.
- @return An AudioStreamBasicDescription that will be used as the default stream format.
- */
-- (AudioStreamBasicDescription)defaultClientFormat;
-
-+ (Float64)defaultClientFormatSampleRate;
-
-//------------------------------------------------------------------------------
-
-/**
  The default value used as the AudioUnit subtype when creating the hardware output component. By default this is kAudioUnitSubType_RemoteIO for iOS and kAudioUnitSubType_HALOutput for OSX. 
  @warning If you change this to anything other than kAudioUnitSubType_HALOutput for OSX you will get a failed assertion because devices can only be set when using the HAL audio unit.
  @return An OSType that represents the AudioUnit subtype for the hardware output component.
