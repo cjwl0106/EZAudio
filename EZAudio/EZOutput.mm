@@ -47,7 +47,8 @@ typedef struct
     AudioStreamBasicDescription clientFormat;
     
     // float converted data
-    float **floatData;
+//    float **inputData;
+    float **outputData;
     
     // nodes
     EZAudioNodeInfo mixerNodeInfo;
@@ -83,7 +84,8 @@ OSStatus EZOutputGraphRenderCallback(void                       *inRefCon,
 //------------------------------------------------------------------------------
 
 @interface EZOutput ()
-@property (nonatomic, strong) EZAudioFloatConverter *floatConverter;
+//@property (nonatomic, strong) EZAudioFloatConverter *inputConverter;
+@property (nonatomic, strong) EZAudioFloatConverter *outputConverter;
 @property (nonatomic, assign) EZOutputInfo *info;
 @end
 
@@ -113,12 +115,19 @@ typedef std::map<EZBusID, DataSourceNode> DataSources;
 
 - (void)dealloc
 {
-    if (self.floatConverter)
+//    if (self.inputConverter)
+//    {
+//        self.inputConverter = nil;
+//        [EZAudioUtilities freeFloatBuffers:self.info->inputData
+//                          numberOfChannels:self.info->clientFormat.mChannelsPerFrame];
+//    }
+    if (self.outputConverter)
     {
-        self.floatConverter = nil;
-        [EZAudioUtilities freeFloatBuffers:self.info->floatData
+        self.outputConverter = nil;
+        [EZAudioUtilities freeFloatBuffers:self.info->outputData
                           numberOfChannels:self.info->clientFormat.mChannelsPerFrame];
     }
+
     [EZAudioUtilities checkResult:AUGraphStop(self.info->graph)
                         operation:"Failed to stop graph"];
     [EZAudioUtilities checkResult:AUGraphClose(self.info->graph)
@@ -394,19 +403,6 @@ typedef std::map<EZBusID, DataSourceNode> DataSources;
     [self onSetDevice];
     
     //
-    // Set maximum frames per slice to 4096 to allow playback during
-    // lock screen (iOS only?)
-    //
-    UInt32 maximumFramesPerSlice = EZOutputMaximumFramesPerSlice;
-    [EZAudioUtilities checkResult:AudioUnitSetProperty(self.info->mixerNodeInfo.audioUnit,
-                                                       kAudioUnitProperty_MaximumFramesPerSlice,
-                                                       kAudioUnitScope_Global,
-                                                       0,
-                                                       &maximumFramesPerSlice,
-                                                       sizeof(maximumFramesPerSlice))
-                        operation:"Failed to set maximum frames per slice on mixer node"];
-    
-    //
     // Initialize all the audio units in the graph
     //
     [EZAudioUtilities checkResult:AUGraphInitialize(self.info->graph)
@@ -535,12 +531,26 @@ typedef std::map<EZBusID, DataSourceNode> DataSources;
 					operation:"Failed to set output client format on converter audio unit"];
 }
 
+- (UInt32)maximumFramesPerSlice
+{
+    UInt32 maximumFramesPerSlice;
+    UInt32 propSize = sizeof(maximumFramesPerSlice);
+    [EZAudioUtilities checkResult:AudioUnitGetProperty(self.info->mixerNodeInfo.audioUnit,
+                                                       kAudioUnitProperty_MaximumFramesPerSlice,
+                                                       kAudioUnitScope_Global,
+                                                       0,
+                                                       &maximumFramesPerSlice,
+                                                       &propSize)
+                        operation:"Failed to get maximum number of frames per slice"];
+    return maximumFramesPerSlice;
+}
+
 - (void)setClientFormat:(AudioStreamBasicDescription)clientFormat
 {
-    if (self.floatConverter)
+    if (self.outputConverter)
     {
-        self.floatConverter = nil;
-        [EZAudioUtilities freeFloatBuffers:self.info->floatData
+        self.outputConverter = nil;
+        [EZAudioUtilities freeFloatBuffers:self.info->outputData
                           numberOfChannels:self.clientFormat.mChannelsPerFrame];
     }
     
@@ -567,8 +577,23 @@ typedef std::map<EZBusID, DataSourceNode> DataSources;
                                                        sizeof(self.info->clientFormat))
                         operation:"Failed to set output client format on mixer audio unit"];
     
-    self.floatConverter = [[EZAudioFloatConverter alloc] initWithInputFormat:clientFormat];
-    self.info->floatData = [EZAudioUtilities floatBuffersWithNumberOfFrames:EZOutputMaximumFramesPerSlice
+    
+    //
+    // Set maximum frames per slice to 4096 to allow playback during
+    // lock screen (iOS only?)
+    //
+    UInt32 maximumFramesPerSlice_ = EZOutputMaximumFramesPerSlice;
+    [EZAudioUtilities checkResult:AudioUnitSetProperty(self.info->mixerNodeInfo.audioUnit,
+                                                       kAudioUnitProperty_MaximumFramesPerSlice,
+                                                       kAudioUnitScope_Global,
+                                                       0,
+                                                       &maximumFramesPerSlice_,
+                                                       sizeof(maximumFramesPerSlice_))
+                        operation:"Failed to set maximum frames per slice on mixer node"];
+        
+    auto maximumFramesPerSlice = [self maximumFramesPerSlice];
+    self.outputConverter = [[EZAudioFloatConverter alloc] initWithInputFormat:clientFormat numberOfFrames:maximumFramesPerSlice];
+    self.info->outputData = [EZAudioUtilities floatBuffersWithNumberOfFrames:maximumFramesPerSlice
                                                            numberOfChannels:clientFormat.mChannelsPerFrame];
 }
 
@@ -800,6 +825,11 @@ OSStatus EZOutputGraphRenderCallback(void                       *inRefCon,
                                      UInt32                      inNumberFrames,
                                      AudioBufferList            *ioData)
 {
+	if (ioData->mBuffers[0].mData == NULL)
+	{
+		return noErr;
+	}
+
     EZOutput *output = (__bridge EZOutput *)inRefCon;
 
     //
@@ -811,11 +841,11 @@ OSStatus EZOutputGraphRenderCallback(void                       *inRefCon,
         {
             UInt32 frames = ioData->mBuffers[0].mDataByteSize / output.info->clientFormat.mBytesPerFrame;
             
-            [output.floatConverter convertDataFromAudioBufferList:ioData
+            [output.outputConverter convertDataFromAudioBufferList:ioData
                                                withNumberOfFrames:frames
-                                                   toFloatBuffers:output.info->floatData];
+                                                   toFloatBuffers:output.info->outputData];
             [output.delegate output:output
-                        playedAudio:output.info->floatData
+                        playedAudio:output.info->outputData
                      withBufferSize:inNumberFrames
                withNumberOfChannels:output.info->clientFormat.mChannelsPerFrame];
         }

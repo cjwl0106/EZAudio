@@ -392,18 +392,18 @@ static OSStatus EZAudioMicrophoneCallback(void                       *inRefCon,
 
 //------------------------------------------------------------------------------
 
-- (UInt32)maximumBufferSize
+- (UInt32)maximumFramesPerSlice
 {
-    UInt32 maximumBufferSize;
-    UInt32 propSize = sizeof(maximumBufferSize);
+    UInt32 maximumFramesPerSlice;
+    UInt32 propSize = sizeof(maximumFramesPerSlice);
     [EZAudioUtilities checkResult:AudioUnitGetProperty(self.info->audioUnit,
                                                        kAudioUnitProperty_MaximumFramesPerSlice,
                                                        kAudioUnitScope_Global,
                                                        0,
-                                                       &maximumBufferSize,
+                                                       &maximumFramesPerSlice,
                                                        &propSize)
                         operation:"Failed to get maximum number of frames per slice"];
-    return maximumBufferSize;
+    return maximumFramesPerSlice;
 }
 
 //------------------------------------------------------------------------------
@@ -455,13 +455,13 @@ static OSStatus EZAudioMicrophoneCallback(void                       *inRefCon,
     //
     // Allocate scratch buffers
     //
-    UInt32 maximumBufferSize = [self maximumBufferSize];
+    UInt32 maximumFramesPerSlice = [self maximumFramesPerSlice];
     BOOL isInterleaved = [EZAudioUtilities isInterleaved:asbd];
     UInt32 channels = asbd.mChannelsPerFrame;
-    self.floatConverter = [[EZAudioFloatConverter alloc] initWithInputFormat:asbd];
-    self.info->floatData = [EZAudioUtilities floatBuffersWithNumberOfFrames:maximumBufferSize
+    self.floatConverter = [[EZAudioFloatConverter alloc] initWithInputFormat:asbd numberOfFrames:maximumFramesPerSlice];
+    self.info->floatData = [EZAudioUtilities floatBuffersWithNumberOfFrames:maximumFramesPerSlice
                                                       numberOfChannels:channels];
-    self.info->audioBufferList = [EZAudioUtilities audioBufferListWithNumberOfFrames:maximumBufferSize
+    self.info->audioBufferList = [EZAudioUtilities audioBufferListWithNumberOfFrames:maximumFramesPerSlice
                                                                     numberOfChannels:channels
                                                                          interleaved:isInterleaved];
     //

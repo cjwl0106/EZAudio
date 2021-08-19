@@ -55,7 +55,7 @@ FOUNDATION_EXPORT UInt32 const EZAudioFloatConverterDefaultPacketSize;
 #pragma mark - Instance Methods
 //------------------------------------------------------------------------------
 
-- (instancetype)initWithInputFormat:(AudioStreamBasicDescription)inputFormat;
+- (instancetype)initWithInputFormat:(AudioStreamBasicDescription)inputFormat numberOfFrames:(UInt32)frames;
 
 //------------------------------------------------------------------------------
 
