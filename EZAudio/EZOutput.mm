@@ -29,6 +29,7 @@
 #import "EZAudioUtilities.h"
 
 #include <map>
+#include <mutex>
 
 //------------------------------------------------------------------------------
 #pragma mark - Constants
@@ -105,7 +106,7 @@ typedef std::map<EZBusID, DataSourceNode> DataSources;
 @implementation EZOutput {
 
 @public
-	EZBusID nextBusID;
+	std::mutex mutex;
 	DataSources dataSources;
 }
 
@@ -146,7 +147,6 @@ typedef std::map<EZBusID, DataSourceNode> DataSources;
     self = [super init];
     if (self)
     {
-		self->nextBusID = 1;
         [self setup];
     }
     return self;
@@ -235,12 +235,33 @@ typedef std::map<EZBusID, DataSourceNode> DataSources;
 {
 	DataSourceNode &node = self->dataSources[busID];
 	// ???
+	
+    [EZAudioUtilities checkResult:AUGraphRemoveNode(
+		self.info->graph,
+		node.converterNodeInfo.node)
+		operation:"Failed to remove converter node to audio graph"];
+
+	[EZAudioUtilities checkResult:AUGraphUpdate(self.info->graph, NULL)
+		operation:"Failed to update render graph"];
+		
+	std::lock_guard<std::mutex> l(self->mutex);
+	self->dataSources.erase(busID);
 }
 
 - (EZBusID) addDataSource:(id<EZOutputDataSource>)source withFormat:(AudioStreamBasicDescription)format
 {
-	auto busID = nextBusID++;
-	DataSourceNode &node = self->dataSources[busID];
+	EZBusID busID = 0;
+	
+	DataSourceNode *node_ = nullptr;
+	{
+		std::lock_guard<std::mutex> l(self->mutex);
+		while (self->dataSources.find(busID) != self->dataSources.end())
+			busID++;
+			
+		node_ = &self->dataSources[busID];
+	}
+		
+	auto &node = *node_;
 	node.format = format;
 	node.source = source;
 	node.parent = (__bridge void *)(self);
@@ -490,7 +511,7 @@ typedef std::map<EZBusID, DataSourceNode> DataSources;
     AudioUnitParameterValue pan;
     [EZAudioUtilities checkResult:AudioUnitGetParameter(self.info->mixerNodeInfo.audioUnit,
                                                         param,
-                                                        kAudioUnitScope_Input,
+                                                        kAudioUnitScope_Output,
                                                         0,
                                                         &pan) operation:"Failed to get pan from mixer unit"];
     return pan;
@@ -509,7 +530,7 @@ typedef std::map<EZBusID, DataSourceNode> DataSources;
     AudioUnitParameterValue volume;
     [EZAudioUtilities checkResult:AudioUnitGetParameter(self.info->mixerNodeInfo.audioUnit,
                                                         param,
-                                                        kAudioUnitScope_Input,
+                                                        kAudioUnitScope_Output,
                                                         0,
                                                         &volume)
                         operation:"Failed to get volume from mixer unit"];
@@ -676,7 +697,7 @@ typedef std::map<EZBusID, DataSourceNode> DataSources;
 #endif
     [EZAudioUtilities checkResult:AudioUnitSetParameter(self.info->mixerNodeInfo.audioUnit,
                                                         param,
-                                                        kAudioUnitScope_Input,
+                                                        kAudioUnitScope_Output,
                                                         0,
                                                         pan,
                                                         0)
@@ -695,7 +716,7 @@ typedef std::map<EZBusID, DataSourceNode> DataSources;
 #endif
     [EZAudioUtilities checkResult:AudioUnitSetParameter(self.info->mixerNodeInfo.audioUnit,
                                                         param,
-                                                        kAudioUnitScope_Input,
+                                                        kAudioUnitScope_Output,
                                                         0,
                                                         volume,
                                                         0)

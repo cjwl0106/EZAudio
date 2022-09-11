@@ -41,7 +41,11 @@ static NSString * const EZAudioUtilitiesNotes[EZAudioUtilitiesNotesLength] =
     @"B"
 };
 
+#if defined(_DEBUG) || defined(DEBUG)
 BOOL __shouldExitOnCheckResultFail = YES;
+#else
+BOOL __shouldExitOnCheckResultFail = NO;
+#endif
 
 @implementation EZAudioUtilities
 
