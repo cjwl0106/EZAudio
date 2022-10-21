@@ -279,19 +279,6 @@ typedef std::map<EZBusID, DataSourceNode> DataSources;
                         operation:"Failed to add converter node to audio graph"];
 
     //
-    // Make node connections
-    //
-    OSStatus status = [self connectOutputOfSourceNode:node.converterNodeInfo.node
-                                  sourceNodeOutputBus:0
-                                    toDestinationNode:self.info->mixerNodeInfo.node
-                              destinationNodeInputBus:busID
-                                              inGraph:self.info->graph];
-                                              
-    [EZAudioUtilities checkResult:status
-                        operation:"Failed to connect output of source node to destination node in graph"];
-
-
-    //
     // Get the audio units
     //
     [EZAudioUtilities checkResult:AUGraphNodeInfo(self.info->graph,
@@ -300,8 +287,15 @@ typedef std::map<EZBusID, DataSourceNode> DataSources;
                                                   &node.converterNodeInfo.audioUnit)
                         operation:"Failed to get converter audio unit"];
 
-                        
-                        
+    UInt32 maximumFramesPerSlice_ = EZOutputMaximumFramesPerSlice;
+    [EZAudioUtilities checkResult:AudioUnitSetProperty(node.converterNodeInfo.audioUnit,
+                                                       kAudioUnitProperty_MaximumFramesPerSlice,
+                                                       kAudioUnitScope_Global,
+                                                       0,
+                                                       &maximumFramesPerSlice_,
+                                                       sizeof(maximumFramesPerSlice_))
+                        operation:"Failed to set maximum frames per slice on converter node"];
+
     [EZAudioUtilities checkResult:AudioUnitSetProperty(node.converterNodeInfo.audioUnit,
                                                        kAudioUnitProperty_StreamFormat,
                                                        kAudioUnitScope_Input,
@@ -323,6 +317,18 @@ typedef std::map<EZBusID, DataSourceNode> DataSources;
                                                               0,
                                                               &converterCallback)
                         operation:"Failed to set render callback on converter node"];
+
+    //
+    // Make node connections
+    //
+    OSStatus status = [self connectOutputOfSourceNode:node.converterNodeInfo.node
+                                  sourceNodeOutputBus:0
+                                    toDestinationNode:self.info->mixerNodeInfo.node
+                              destinationNodeInputBus:busID
+                                              inGraph:self.info->graph];
+                                              
+    [EZAudioUtilities checkResult:status
+                        operation:"Failed to connect output of source node to destination node in graph"];
 
 //	[EZAudioUtilities checkResult:AUGraphUpdate(self.info->graph, &self.info->graphUpdated)
 //		operation:"Failed to update render graph"];
@@ -373,6 +379,7 @@ typedef std::map<EZBusID, DataSourceNode> DataSources;
                                                  &self.info->mixerNodeInfo.node)
                         operation:"Failed to add mixer node to audio graph"];
     
+
     //
     // Add output node
     //
@@ -391,8 +398,41 @@ typedef std::map<EZBusID, DataSourceNode> DataSources;
     [EZAudioUtilities checkResult:AUGraphOpen(self.info->graph)
                         operation:"Failed to open graph"];
     
+   
+    [EZAudioUtilities checkResult:AUGraphNodeInfo(self.info->graph,
+                                                  self.info->mixerNodeInfo.node,
+                                                  &mixerDescription,
+                                                  &self.info->mixerNodeInfo.audioUnit)
+                        operation:"Failed to get mixer audio unit"];
+                        
+    UInt32 maximumFramesPerSlice_ = EZOutputMaximumFramesPerSlice;
+    [EZAudioUtilities checkResult:AudioUnitSetProperty(self.info->mixerNodeInfo.audioUnit,
+                                                       kAudioUnitProperty_MaximumFramesPerSlice,
+                                                       kAudioUnitScope_Global,
+                                                       0,
+                                                       &maximumFramesPerSlice_,
+                                                       sizeof(maximumFramesPerSlice_))
+                        operation:"Failed to set maximum frames per slice on mixer node"];
 
-    
+    [self setClientFormat:[self clientFormatWithSampleRate:self.sampleRate]];
+
+    [EZAudioUtilities checkResult:AUGraphNodeInfo(self.info->graph,
+                                                  self.info->outputNodeInfo.node,
+                                                  &outputDescription,
+                                                  &self.info->outputNodeInfo.audioUnit)
+                        operation:"Failed to get output audio unit"];
+                        
+                        
+    maximumFramesPerSlice_ = EZOutputMaximumFramesPerSlice;
+    [EZAudioUtilities checkResult:AudioUnitSetProperty(self.info->outputNodeInfo.audioUnit,
+                                                       kAudioUnitProperty_MaximumFramesPerSlice,
+                                                       kAudioUnitScope_Global,
+                                                       0,
+                                                       &maximumFramesPerSlice_,
+                                                       sizeof(maximumFramesPerSlice_))
+                        operation:"Failed to set maximum frames per slice on mixer node"];
+
+
     //
     // Connect mixer to output
     //
@@ -403,24 +443,9 @@ typedef std::map<EZBusID, DataSourceNode> DataSources;
                                                           0)
                         operation:"Failed to connect mixer node to output node"];
     
-
-    [EZAudioUtilities checkResult:AUGraphNodeInfo(self.info->graph,
-                                                  self.info->mixerNodeInfo.node,
-                                                  &mixerDescription,
-                                                  &self.info->mixerNodeInfo.audioUnit)
-                        operation:"Failed to get mixer audio unit"];
-    [EZAudioUtilities checkResult:AUGraphNodeInfo(self.info->graph,
-                                                  self.info->outputNodeInfo.node,
-                                                  &outputDescription,
-                                                  &self.info->outputNodeInfo.audioUnit)
-                        operation:"Failed to get output audio unit"];
-    
-
-    
     //
     // Set stream formats
     //
-    [self setClientFormat:[self clientFormatWithSampleRate:self.sampleRate]];
     [self onSetDevice];
     
     //
@@ -590,6 +615,7 @@ typedef std::map<EZBusID, DataSourceNode> DataSources;
                                                        &self.info->clientFormat,
                                                        sizeof(self.info->clientFormat))
                         operation:"Failed to set input client format on mixer audio unit"];
+                        
     [EZAudioUtilities checkResult:AudioUnitSetProperty(self.info->mixerNodeInfo.audioUnit,
                                                        kAudioUnitProperty_StreamFormat,
                                                        kAudioUnitScope_Output,
@@ -598,20 +624,6 @@ typedef std::map<EZBusID, DataSourceNode> DataSources;
                                                        sizeof(self.info->clientFormat))
                         operation:"Failed to set output client format on mixer audio unit"];
     
-    
-    //
-    // Set maximum frames per slice to 4096 to allow playback during
-    // lock screen (iOS only?)
-    //
-    UInt32 maximumFramesPerSlice_ = EZOutputMaximumFramesPerSlice;
-    [EZAudioUtilities checkResult:AudioUnitSetProperty(self.info->mixerNodeInfo.audioUnit,
-                                                       kAudioUnitProperty_MaximumFramesPerSlice,
-                                                       kAudioUnitScope_Global,
-                                                       0,
-                                                       &maximumFramesPerSlice_,
-                                                       sizeof(maximumFramesPerSlice_))
-                        operation:"Failed to set maximum frames per slice on mixer node"];
-        
     auto maximumFramesPerSlice = [self maximumFramesPerSlice];
     self.outputConverter = [[EZAudioFloatConverter alloc] initWithInputFormat:clientFormat numberOfFrames:maximumFramesPerSlice];
     self.info->outputData = [EZAudioUtilities floatBuffersWithNumberOfFrames:maximumFramesPerSlice
@@ -780,9 +792,8 @@ typedef std::map<EZBusID, DataSourceNode> DataSources;
 
 - (OSType)outputAudioUnitSubType
 {
-//	return kAudioUnitSubType_VoiceProcessingIO;
-
 #if TARGET_OS_IPHONE
+	return kAudioUnitSubType_VoiceProcessingIO;
     return kAudioUnitSubType_RemoteIO;
 #elif TARGET_OS_MAC
     return kAudioUnitSubType_HALOutput;
@@ -846,6 +857,9 @@ OSStatus EZOutputGraphRenderCallback(void                       *inRefCon,
                                      UInt32                      inNumberFrames,
                                      AudioBufferList            *ioData)
 {
+	// THIS FUNCTION TAKES TOO MUCH TIME, ON APPLE TODO, USE APPLE STUFF TO DO SOUND CANCELING
+	return noErr;
+
 	if (ioData->mBuffers[0].mData == NULL)
 	{
 		return noErr;
