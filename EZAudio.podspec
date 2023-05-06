@@ -15,11 +15,10 @@ Pod::Spec.new do |s|
     s.requires_arc = true;
     s.default_subspec = 'Full'
     s.subspec 'Core' do |core|
-        core.source_files  = 'EZAudio/*.{h,m,c}'
+        core.source_files  = 'EZAudio/*.{h,m,c,mm}'
     end
 
     s.subspec 'Full' do |full|
-        full.dependency 'TPCircularBuffer', '1.1'
         full.dependency 'EZAudio/Core'
     end
 end
