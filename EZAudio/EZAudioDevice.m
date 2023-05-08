@@ -49,6 +49,100 @@
 
 @implementation EZAudioDevice
 
+/*
+#if TARGET_OS_IPHONE
+
+- (NSArray *)sampleRates
+{
+	[[[AVAudioSession sharedInstance] sampleRate]
+
+ UInt32 propertySize = sizeof(AudioDeviceID) ;
+    Boolean isWritable = false ;
+
+    CheckError(AudioDeviceGetPropertyInfo(inDeviceID,       //the inDeviceID is the default input device
+                                          0,
+                                          true,
+                                          kAudioDevicePropertyAvailableNominalSampleRates,
+                                          &propertySize,
+                                          &isWritable),
+               "Get the Available Sample Rate Count Failed") ;
+
+    m_valueCount = propertySize / sizeof(AudioValueRange) ;
+    printf("Available %d Sample Rate\n",m_valueCount) ;
+
+    CheckError(AudioDeviceGetProperty(inDeviceID,
+                                      0,
+                                      false,
+                                      kAudioDevicePropertyAvailableNominalSampleRates,
+                                      &propertySize,
+                                      m_valueTabe),
+               "Get the Available Sample Rate Count Failed") ;
+
+
+    for(UInt32 i = 0 ; i < m_valueCount ; ++i)
+    {
+        printf("Available Sample Rate value : %ld\n",(long)m_valueTabe[i].mMinimum) ;
+    }
+    
+    return nil;
+}
+#else
+
+//------------------------------------------------------------------------------
+
+- (NSArray *)sampleRates
+{
+	AudioObjectPropertyAddress defaultDeviceProperty;
+	UInt32 propertySize;
+	
+		// Get the available sample rates of the default input device.
+	defaultDeviceProperty.mSelector = kAudioDevicePropertyAvailableNominalSampleRates;
+
+	CheckError (AudioObjectGetPropertyDataSize(defaultDevice,
+                                   &defaultDeviceProperty,
+                                   0,
+                                   NULL,
+                                   &propertySize),
+            "Couldn't get sample rate count");
+int m_valueCount = propertySize / sizeof(AudioValueRange) ;
+
+printf("Available %d Sample Rates\n",m_valueCount) ;
+
+AudioValueRange m_valueTabe[m_valueCount];
+
+CheckError    (AudioObjectGetPropertyData(defaultDevice,
+                                          &defaultDeviceProperty,
+                                          0,
+                                          NULL,
+                                          &propertySize,
+                                          m_valueTabe),
+               "Couldn't get available sample rates");
+
+
+for(UInt32 i = 0 ; i < m_valueCount ; ++i)
+{
+    printf("Available Sample Rate value : %f\n", m_valueTabe[i].mMinimum) ;
+}
+
+// Set the sample rate to one of the available values.
+AudioValueRange inputSampleRate;
+inputSampleRate.mMinimum = 32000;
+inputSampleRate.mMaximum = 32000;
+defaultDeviceProperty.mSelector = kAudioDevicePropertyNominalSampleRate;
+CheckError    (AudioObjectSetPropertyData(defaultDevice,
+                                          &defaultDeviceProperty,
+                                          0,
+                                          NULL,
+                                          sizeof(inputSampleRate),
+                                          &inputSampleRate),
+               "Couldn't get available sample rates");
+}
+
+//------------------------------------------------------------------------------
+#endif
+*/
+
+
 #if TARGET_OS_IPHONE
 
 //------------------------------------------------------------------------------

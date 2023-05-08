@@ -1,3 +1,7 @@
+xcshareddata
+.bin
+Makefile
+Makefile.project
 .DS_Store
 build/
 *.pbxuser

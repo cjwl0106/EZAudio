@@ -35,6 +35,7 @@
 typedef struct EZMicrophoneInfo
 {
     AudioUnit                     audioUnit;
+	size_t 						  maximumFrames;
     AudioBufferList              *audioBufferList;
     float                       **floatData;
     AudioStreamBasicDescription   inputFormat;
@@ -392,18 +393,18 @@ static OSStatus EZAudioMicrophoneCallback(void                       *inRefCon,
 
 //------------------------------------------------------------------------------
 
-- (UInt32)maximumBufferSize
+- (UInt32)maximumFramesPerSlice
 {
-    UInt32 maximumBufferSize;
-    UInt32 propSize = sizeof(maximumBufferSize);
+    UInt32 maximumFramesPerSlice;
+    UInt32 propSize = sizeof(maximumFramesPerSlice);
     [EZAudioUtilities checkResult:AudioUnitGetProperty(self.info->audioUnit,
                                                        kAudioUnitProperty_MaximumFramesPerSlice,
                                                        kAudioUnitScope_Global,
                                                        0,
-                                                       &maximumBufferSize,
+                                                       &maximumFramesPerSlice,
                                                        &propSize)
                         operation:"Failed to get maximum number of frames per slice"];
-    return maximumBufferSize;
+    return maximumFramesPerSlice;
 }
 
 //------------------------------------------------------------------------------
@@ -426,13 +427,6 @@ static OSStatus EZAudioMicrophoneCallback(void                       *inRefCon,
 
 - (void)setAudioStreamBasicDescription:(AudioStreamBasicDescription)asbd
 {
-    if (self.floatConverter)
-    {
-        [EZAudioUtilities freeBufferList:self.info->audioBufferList];
-        [EZAudioUtilities freeFloatBuffers:self.info->floatData
-                          numberOfChannels:self.info->streamFormat.mChannelsPerFrame];
-    }
-    
     //
     // Set new stream format
     //
@@ -453,24 +447,14 @@ static OSStatus EZAudioMicrophoneCallback(void                       *inRefCon,
                         operation:"Failed to set stream format on output scope"];
     
     //
-    // Allocate scratch buffers
-    //
-    UInt32 maximumBufferSize = [self maximumBufferSize];
-    BOOL isInterleaved = [EZAudioUtilities isInterleaved:asbd];
-    UInt32 channels = asbd.mChannelsPerFrame;
-    self.floatConverter = [[EZAudioFloatConverter alloc] initWithInputFormat:asbd];
-    self.info->floatData = [EZAudioUtilities floatBuffersWithNumberOfFrames:maximumBufferSize
-                                                      numberOfChannels:channels];
-    self.info->audioBufferList = [EZAudioUtilities audioBufferListWithNumberOfFrames:maximumBufferSize
-                                                                    numberOfChannels:channels
-                                                                         interleaved:isInterleaved];
-    //
     // Notify delegate
     //
     if ([self.delegate respondsToSelector:@selector(microphone:hasAudioStreamBasicDescription:)])
     {
         [self.delegate microphone:self hasAudioStreamBasicDescription:asbd];
     }
+    
+    [self reallocateBuffers:0];
 }
 
 //------------------------------------------------------------------------------
@@ -557,8 +541,7 @@ static OSStatus EZAudioMicrophoneCallback(void                       *inRefCon,
 - (void)setOutput:(EZOutput *)output
 {
     _output = output;
-    _output.inputFormat = self.audioStreamBasicDescription;
-    _output.dataSource = self;
+    [_output addDataSource:self withFormat:self.audioStreamBasicDescription];
 }
 
 //------------------------------------------------------------------------------
@@ -598,6 +581,36 @@ static OSStatus EZAudioMicrophoneCallback(void                       *inRefCon,
 }
 
 //------------------------------------------------------------------------------
+- (void)reallocateBuffers:(int)minimumNumberOfFrames
+{
+    if (self.floatConverter)
+    {
+        [EZAudioUtilities freeBufferList:self.info->audioBufferList];
+        [EZAudioUtilities freeFloatBuffers:self.info->floatData
+                          numberOfChannels:self.info->streamFormat.mChannelsPerFrame];
+    }
+
+	AudioStreamBasicDescription asbd = self.info->streamFormat;
+	
+    //
+    // Allocate scratch buffers
+    //
+    UInt32 maximumFramesPerSlice = [self maximumFramesPerSlice];
+    if (maximumFramesPerSlice < minimumNumberOfFrames)
+		maximumFramesPerSlice = minimumNumberOfFrames;
+    
+    BOOL isInterleaved = [EZAudioUtilities isInterleaved:asbd];
+    UInt32 channels = asbd.mChannelsPerFrame;
+    self.floatConverter = [[EZAudioFloatConverter alloc] initWithInputFormat:asbd numberOfFrames:maximumFramesPerSlice];
+    self.info->floatData = [EZAudioUtilities floatBuffersWithNumberOfFrames:maximumFramesPerSlice
+                                                      numberOfChannels:channels];
+	self.info->maximumFrames = maximumFramesPerSlice;
+    self.info->audioBufferList = [EZAudioUtilities audioBufferListWithNumberOfFrames:maximumFramesPerSlice
+                                                                    numberOfChannels:channels
+                                                                         interleaved:isInterleaved];
+	
+	
+}
 
 @end
 
@@ -615,6 +628,9 @@ static OSStatus EZAudioMicrophoneCallback(void                       *inRefCon,
     EZMicrophone *microphone = (__bridge EZMicrophone *)inRefCon;
     EZMicrophoneInfo *info = (EZMicrophoneInfo *)microphone.info;
     
+    if (inNumberFrames > info->maximumFrames)
+		[microphone reallocateBuffers:inNumberFrames];
+		
     //
     // Make sure the size of each buffer in the stored buffer array
     // is properly set using the actual number of frames coming in!
@@ -622,6 +638,8 @@ static OSStatus EZAudioMicrophoneCallback(void                       *inRefCon,
     for (int i = 0; i < info->audioBufferList->mNumberBuffers; i++) {
         info->audioBufferList->mBuffers[i].mDataByteSize = inNumberFrames * info->streamFormat.mBytesPerFrame;
     }
+    
+    assert(inNumberFrames <= info->maximumFrames);
     
     //
     // Render audio into buffer

@@ -24,6 +24,7 @@
 //  THE SOFTWARE.
 
 #import <Foundation/Foundation.h>
+#import <CoreGraphics/CoreGraphics.h>
 #import <AudioToolbox/AudioToolbox.h>
 #import <TargetConditionals.h>
 #import "TPCircularBuffer.h"

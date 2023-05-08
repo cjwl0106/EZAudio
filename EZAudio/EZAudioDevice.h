@@ -74,6 +74,8 @@
  */
 + (NSArray *)outputDevices;
 
+- (NSArray *)sampleRates;
+
 #if TARGET_OS_IPHONE
 
 //------------------------------------------------------------------------------

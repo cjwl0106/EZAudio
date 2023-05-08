@@ -32,7 +32,7 @@
 		469F4D341B749FEC00666A46 /* EZMicrophone.h in Headers */ = {isa = PBXBuildFile; fileRef = 469F4D141B749FEC00666A46 /* EZMicrophone.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		469F4D351B749FEC00666A46 /* EZMicrophone.m in Sources */ = {isa = PBXBuildFile; fileRef = 469F4D151B749FEC00666A46 /* EZMicrophone.m */; };
 		469F4D361B749FEC00666A46 /* EZOutput.h in Headers */ = {isa = PBXBuildFile; fileRef = 469F4D161B749FEC00666A46 /* EZOutput.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		469F4D371B749FEC00666A46 /* EZOutput.m in Sources */ = {isa = PBXBuildFile; fileRef = 469F4D171B749FEC00666A46 /* EZOutput.m */; };
+		469F4D371B749FEC00666A46 /* EZOutput.mm in Sources */ = {isa = PBXBuildFile; fileRef = 469F4D171B749FEC00666A46 /* EZOutput.mm */; };
 		469F4D381B749FEC00666A46 /* EZPlot.h in Headers */ = {isa = PBXBuildFile; fileRef = 469F4D181B749FEC00666A46 /* EZPlot.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		469F4D391B749FEC00666A46 /* EZPlot.m in Sources */ = {isa = PBXBuildFile; fileRef = 469F4D191B749FEC00666A46 /* EZPlot.m */; };
 		469F4D3A1B749FEC00666A46 /* EZRecorder.h in Headers */ = {isa = PBXBuildFile; fileRef = 469F4D1A1B749FEC00666A46 /* EZRecorder.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -67,7 +67,7 @@
 		8A5A4BCC1BBBDD7E00A8A048 /* EZAudioPlotGL.m in Sources */ = {isa = PBXBuildFile; fileRef = 469F4D111B749FEC00666A46 /* EZAudioPlotGL.m */; };
 		8A5A4BCD1BBBDD7E00A8A048 /* EZAudioUtilities.m in Sources */ = {isa = PBXBuildFile; fileRef = 469F4D131B749FEC00666A46 /* EZAudioUtilities.m */; };
 		8A5A4BCE1BBBDD7E00A8A048 /* EZMicrophone.m in Sources */ = {isa = PBXBuildFile; fileRef = 469F4D151B749FEC00666A46 /* EZMicrophone.m */; };
-		8A5A4BCF1BBBDD7E00A8A048 /* EZOutput.m in Sources */ = {isa = PBXBuildFile; fileRef = 469F4D171B749FEC00666A46 /* EZOutput.m */; };
+		8A5A4BCF1BBBDD7E00A8A048 /* EZOutput.mm in Sources */ = {isa = PBXBuildFile; fileRef = 469F4D171B749FEC00666A46 /* EZOutput.mm */; };
 		8A5A4BD01BBBDD7E00A8A048 /* EZPlot.m in Sources */ = {isa = PBXBuildFile; fileRef = 469F4D191B749FEC00666A46 /* EZPlot.m */; };
 		8A5A4BD11BBBDD7E00A8A048 /* EZRecorder.m in Sources */ = {isa = PBXBuildFile; fileRef = 469F4D1B1B749FEC00666A46 /* EZRecorder.m */; };
 		8A5A4BD21BBBDE2800A8A048 /* TPCircularBuffer.c in Sources */ = {isa = PBXBuildFile; fileRef = 469F4D1C1B749FEC00666A46 /* TPCircularBuffer.c */; };
@@ -103,7 +103,7 @@
 		469F4D141B749FEC00666A46 /* EZMicrophone.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EZMicrophone.h; sourceTree = "<group>"; };
 		469F4D151B749FEC00666A46 /* EZMicrophone.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EZMicrophone.m; sourceTree = "<group>"; };
 		469F4D161B749FEC00666A46 /* EZOutput.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EZOutput.h; sourceTree = "<group>"; };
-		469F4D171B749FEC00666A46 /* EZOutput.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EZOutput.m; sourceTree = "<group>"; };
+		469F4D171B749FEC00666A46 /* EZOutput.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = EZOutput.mm; sourceTree = "<group>"; };
 		469F4D181B749FEC00666A46 /* EZPlot.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EZPlot.h; sourceTree = "<group>"; };
 		469F4D191B749FEC00666A46 /* EZPlot.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EZPlot.m; sourceTree = "<group>"; };
 		469F4D1A1B749FEC00666A46 /* EZRecorder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EZRecorder.h; sourceTree = "<group>"; };
@@ -178,7 +178,7 @@
 				469F4D141B749FEC00666A46 /* EZMicrophone.h */,
 				469F4D151B749FEC00666A46 /* EZMicrophone.m */,
 				469F4D161B749FEC00666A46 /* EZOutput.h */,
-				469F4D171B749FEC00666A46 /* EZOutput.m */,
+				469F4D171B749FEC00666A46 /* EZOutput.mm */,
 				469F4D181B749FEC00666A46 /* EZPlot.h */,
 				469F4D191B749FEC00666A46 /* EZPlot.m */,
 				469F4D1A1B749FEC00666A46 /* EZRecorder.h */,
@@ -312,6 +312,7 @@
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
 			knownRegions = (
+				English,
 				en,
 			);
 			mainGroup = 469F4CE91B749F7800666A46;
@@ -361,7 +362,7 @@
 				469F4D351B749FEC00666A46 /* EZMicrophone.m in Sources */,
 				469F4D271B749FEC00666A46 /* EZAudioFile.m in Sources */,
 				469F4D231B749FEC00666A46 /* EZAudioDisplayLink.m in Sources */,
-				469F4D371B749FEC00666A46 /* EZOutput.m in Sources */,
+				469F4D371B749FEC00666A46 /* EZOutput.mm in Sources */,
 				469F4D211B749FEC00666A46 /* EZAudioDevice.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -383,7 +384,7 @@
 				8A5A4BCC1BBBDD7E00A8A048 /* EZAudioPlotGL.m in Sources */,
 				8A5A4BCD1BBBDD7E00A8A048 /* EZAudioUtilities.m in Sources */,
 				8A5A4BCE1BBBDD7E00A8A048 /* EZMicrophone.m in Sources */,
-				8A5A4BCF1BBBDD7E00A8A048 /* EZOutput.m in Sources */,
+				8A5A4BCF1BBBDD7E00A8A048 /* EZOutput.mm in Sources */,
 				8A5A4BD01BBBDD7E00A8A048 /* EZPlot.m in Sources */,
 				8A5A4BD11BBBDD7E00A8A048 /* EZRecorder.m in Sources */,
 			);
@@ -397,7 +398,6 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
-				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
@@ -444,7 +444,6 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
-				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
@@ -515,6 +514,7 @@
 		8A5A4BAE1BBBDCB200A8A048 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
 				COMBINE_HIDPI_IMAGES = YES;
 				DEFINES_MODULE = YES;
 				DYLIB_COMPATIBILITY_VERSION = 1;
@@ -535,6 +535,7 @@
 		8A5A4BAF1BBBDCB200A8A048 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
 				COMBINE_HIDPI_IMAGES = YES;
 				DEFINES_MODULE = YES;
 				DYLIB_COMPATIBILITY_VERSION = 1;
@@ -580,6 +581,7 @@
 				8A5A4BAF1BBBDCB200A8A048 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

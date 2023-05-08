@@ -48,14 +48,14 @@ FOUNDATION_EXPORT UInt32 const EZAudioFloatConverterDefaultPacketSize;
 #pragma mark - Properties
 //------------------------------------------------------------------------------
 
-@property (nonatomic, assign, readonly) AudioStreamBasicDescription inputFormat;
-@property (nonatomic, assign, readonly) AudioStreamBasicDescription floatFormat;
+//@property (nonatomic, assign, readonly) AudioStreamBasicDescription inputFormat;
+//@property (nonatomic, assign, readonly) AudioStreamBasicDescription floatFormat;
 
 //------------------------------------------------------------------------------
 #pragma mark - Instance Methods
 //------------------------------------------------------------------------------
 
-- (instancetype)initWithInputFormat:(AudioStreamBasicDescription)inputFormat;
+- (instancetype)initWithInputFormat:(AudioStreamBasicDescription)inputFormat numberOfFrames:(UInt32)frames;
 
 //------------------------------------------------------------------------------
 

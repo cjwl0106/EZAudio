@@ -41,7 +41,11 @@ static NSString * const EZAudioUtilitiesNotes[EZAudioUtilitiesNotesLength] =
     @"B"
 };
 
+#if defined(_DEBUG) || defined(DEBUG)
 BOOL __shouldExitOnCheckResultFail = YES;
+#else
+BOOL __shouldExitOnCheckResultFail = NO;
+#endif
 
 @implementation EZAudioUtilities
 
@@ -236,15 +240,17 @@ BOOL __shouldExitOnCheckResultFail = YES;
 + (AudioStreamBasicDescription)monoFloatFormatWithSampleRate:(float)sampleRate
 {
     AudioStreamBasicDescription asbd;
-    UInt32 byteSize = sizeof(float);
-    asbd.mBitsPerChannel   = 8 * byteSize;
-    asbd.mBytesPerFrame    = byteSize;
-    asbd.mBytesPerPacket   = byteSize;
+    UInt32 sampleByteSize = sizeof(float);
     asbd.mChannelsPerFrame = 1;
+    asbd.mFramesPerPacket  = 1;
     asbd.mFormatFlags      = kAudioFormatFlagIsPacked|kAudioFormatFlagIsFloat;
     asbd.mFormatID         = kAudioFormatLinearPCM;
-    asbd.mFramesPerPacket  = 1;
+
+    asbd.mBitsPerChannel   = 8 * sampleByteSize;
+    asbd.mBytesPerFrame    = asbd.mChannelsPerFrame * sampleByteSize;
+    asbd.mBytesPerPacket   = asbd.mFramesPerPacket * asbd.mBytesPerFrame;
     asbd.mSampleRate       = sampleRate;
+    asbd.mReserved         = 0;
     return asbd;
 }
 
@@ -253,15 +259,18 @@ BOOL __shouldExitOnCheckResultFail = YES;
 + (AudioStreamBasicDescription)monoCanonicalFormatWithSampleRate:(float)sampleRate
 {
     AudioStreamBasicDescription asbd;
-    UInt32 byteSize = sizeof(float);
-    asbd.mBitsPerChannel   = 8 * byteSize;
-    asbd.mBytesPerFrame    = byteSize;
-    asbd.mBytesPerPacket   = byteSize;
+    UInt32 sampleByteSize = sizeof(float);
     asbd.mChannelsPerFrame = 1;
+    asbd.mFramesPerPacket  = 1;
     asbd.mFormatFlags      = kAudioFormatFlagsNativeFloatPacked|kAudioFormatFlagIsNonInterleaved;
     asbd.mFormatID         = kAudioFormatLinearPCM;
-    asbd.mFramesPerPacket  = 1;
+
+    asbd.mBitsPerChannel   = 8 * sampleByteSize;
+    asbd.mBytesPerFrame    = asbd.mChannelsPerFrame * sampleByteSize;
+    asbd.mBytesPerPacket   = asbd.mFramesPerPacket * asbd.mBytesPerFrame;
     asbd.mSampleRate       = sampleRate;
+    asbd.mReserved         = 0;
+    
     return asbd;
 }
 
@@ -270,15 +279,22 @@ BOOL __shouldExitOnCheckResultFail = YES;
 + (AudioStreamBasicDescription)stereoCanonicalNonInterleavedFormatWithSampleRate:(float)sampleRate
 {
     AudioStreamBasicDescription asbd;
-    UInt32 byteSize = sizeof(float);
-    asbd.mBitsPerChannel   = 8 * byteSize;
-    asbd.mBytesPerFrame    = byteSize;
-    asbd.mBytesPerPacket   = byteSize;
+    UInt32 sampleByteSize = sizeof(float);
     asbd.mChannelsPerFrame = 2;
+    asbd.mFramesPerPacket  = 1;
     asbd.mFormatFlags      = kAudioFormatFlagsNativeFloatPacked|kAudioFormatFlagIsNonInterleaved;
     asbd.mFormatID         = kAudioFormatLinearPCM;
-    asbd.mFramesPerPacket  = 1;
+    
+    
+    asbd.mBitsPerChannel   = 8 * sampleByteSize;
+    
+    // why is this like this I have no idea
+    asbd.mBytesPerFrame    = sampleByteSize;
+    // asbd.mBytesPerFrame    = asbd.mChannelsPerFrame * sampleByteSize;
+
+    asbd.mBytesPerPacket   = asbd.mFramesPerPacket * asbd.mBytesPerFrame;
     asbd.mSampleRate       = sampleRate;
+    asbd.mReserved         = 0;
     return asbd;
 }
 
@@ -287,14 +303,15 @@ BOOL __shouldExitOnCheckResultFail = YES;
 + (AudioStreamBasicDescription)stereoFloatInterleavedFormatWithSampleRate:(float)sampleRate
 {
     AudioStreamBasicDescription asbd;
-    UInt32 floatByteSize   = sizeof(float);
+    UInt32 sampleByteSize   = sizeof(float);
     asbd.mChannelsPerFrame = 2;
-    asbd.mBitsPerChannel   = 8 * floatByteSize;
-    asbd.mBytesPerFrame    = asbd.mChannelsPerFrame * floatByteSize;
     asbd.mFramesPerPacket  = 1;
-    asbd.mBytesPerPacket   = asbd.mFramesPerPacket * asbd.mBytesPerFrame;
     asbd.mFormatFlags      = kAudioFormatFlagIsFloat;
     asbd.mFormatID         = kAudioFormatLinearPCM;
+    
+    asbd.mBitsPerChannel   = 8 * sampleByteSize;
+    asbd.mBytesPerFrame    = asbd.mChannelsPerFrame * sampleByteSize;
+    asbd.mBytesPerPacket   = asbd.mFramesPerPacket * asbd.mBytesPerFrame;
     asbd.mSampleRate       = sampleRate;
     asbd.mReserved         = 0;
     return asbd;
@@ -323,15 +340,21 @@ BOOL __shouldExitOnCheckResultFail = YES;
 + (AudioStreamBasicDescription)stereoFloatNonInterleavedFormatWithSampleRate:(float)sampleRate
 {
     AudioStreamBasicDescription asbd;
-    UInt32 floatByteSize   = sizeof(float);
-    asbd.mBitsPerChannel   = 8 * floatByteSize;
-    asbd.mBytesPerFrame    = floatByteSize;
+    UInt32 sampleByteSize   = sizeof(float);
     asbd.mChannelsPerFrame = 2;
+    asbd.mFramesPerPacket  = 1;
     asbd.mFormatFlags      = kAudioFormatFlagIsFloat|kAudioFormatFlagIsNonInterleaved;
     asbd.mFormatID         = kAudioFormatLinearPCM;
-    asbd.mFramesPerPacket  = 1;
+    
+    asbd.mBitsPerChannel   = 8 * sampleByteSize;
+    
+    // why is this like this I have no idea
+    asbd.mBytesPerFrame    = sampleByteSize;
+    // asbd.mBytesPerFrame    = asbd.mChannelsPerFrame * sampleByteSize;
+    
     asbd.mBytesPerPacket   = asbd.mFramesPerPacket * asbd.mBytesPerFrame;
     asbd.mSampleRate       = sampleRate;
+    asbd.mReserved         = 0;
     return asbd;
 }
 
@@ -557,7 +580,7 @@ BOOL __shouldExitOnCheckResultFail = YES;
     fprintf(stderr, "Error: %s (%s)\n", operation, errorString);
     if (__shouldExitOnCheckResultFail)
     {
-        exit(-1);
+        abort();
     }
 }
 

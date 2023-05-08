@@ -40,6 +40,8 @@
 FOUNDATION_EXPORT UInt32  const EZOutputMaximumFramesPerSlice;
 FOUNDATION_EXPORT Float64 const EZOutputDefaultSampleRate;
 
+typedef UInt32 EZBusID;
+
 //------------------------------------------------------------------------------
 #pragma mark - EZOutputDataSource
 //------------------------------------------------------------------------------
@@ -133,13 +135,6 @@ FOUNDATION_EXPORT Float64 const EZOutputDefaultSampleRate;
 /**
  Creates a new instance of the EZOutput and allows the caller to specify an EZOutputDataSource.
  @param dataSource The EZOutputDataSource that will be used to pull the audio data for the output callback.
- @return A newly created instance of the EZOutput class.
- */
-- (instancetype)initWithDataSource:(id<EZOutputDataSource>)dataSource;
-
-/**
- Creates a new instance of the EZOutput and allows the caller to specify an EZOutputDataSource.
- @param dataSource The EZOutputDataSource that will be used to pull the audio data for the output callback.
  @param inputFormat The AudioStreamBasicDescription of the EZOutput.
  @warning AudioStreamBasicDescription input formats must be linear PCM!
  @return A newly created instance of the EZOutput class.
@@ -160,13 +155,6 @@ FOUNDATION_EXPORT Float64 const EZOutputDefaultSampleRate;
  @return A newly created instance of the EZOutput class.
  */
 + (instancetype)output;
-
-/**
- Class method to create a new instance of the EZOutput and allows the caller to specify an EZOutputDataSource.
- @param dataSource The EZOutputDataSource that will be used to pull the audio data for the output callback.
- @return A newly created instance of the EZOutput class.
- */
-+ (instancetype)outputWithDataSource:(id<EZOutputDataSource>)dataSource;
 
 /**
  Class method to create a new instance of the EZOutput and allows the caller to specify an EZOutputDataSource.
@@ -196,17 +184,6 @@ FOUNDATION_EXPORT Float64 const EZOutputDefaultSampleRate;
 #pragma mark - Properties
 //------------------------------------------------------------------------------
 
-///-----------------------------------------------------------
-/// @name Setting/Getting The Stream Formats
-///-----------------------------------------------------------
-
-/**
- Provides the AudioStreamBasicDescription structure used at the beginning of the playback graph which is then converted into the `clientFormat` using the AUConverter audio unit.
-  @warning The AudioStreamBasicDescription set here must be linear PCM. Compressed formats are not supported...the EZAudioFile's clientFormat performs the audio conversion on the fly from compressed to linear PCM so there is no additional work to be done there.
- @return An AudioStreamBasicDescription structure describing
- */
-@property (nonatomic, readwrite) AudioStreamBasicDescription inputFormat;
-
 //------------------------------------------------------------------------------
 
 /**
@@ -225,7 +202,10 @@ FOUNDATION_EXPORT Float64 const EZOutputDefaultSampleRate;
 /**
  The EZOutputDataSource that provides the audio data in the `inputFormat` for the EZOutput to play. If an EZOutputDataSource is not specified then the EZOutput will just output silence.
  */
-@property (nonatomic, weak) id<EZOutputDataSource> dataSource;
+//@property (nonatomic, weak) id<EZOutputDataSource> dataSource;
+
+- (EZBusID) addDataSource:(id<EZOutputDataSource>)source withFormat:(AudioStreamBasicDescription)format;
+- (void) removeDataSource:(EZBusID)source;
 
 //------------------------------------------------------------------------------
 
@@ -347,22 +327,6 @@ FOUNDATION_EXPORT Float64 const EZOutputDefaultSampleRate;
                     toDestinationNode:(AUNode)destinationNode
               destinationNodeInputBus:(UInt32)destinationNodeInputBus
                               inGraph:(AUGraph)graph;
-
-//------------------------------------------------------------------------------
-
-/**
- The default AudioStreamBasicDescription set as the client format of the output if no custom `clientFormat` is set. Defaults to a 44.1 kHz stereo, non-interleaved, float format.
- @return An AudioStreamBasicDescription that will be used as the default stream format.
- */
-- (AudioStreamBasicDescription)defaultClientFormat;
-
-//------------------------------------------------------------------------------
-
-/**
- The default AudioStreamBasicDescription set as the `inputFormat` of the output if no custom `inputFormat` is set. Defaults to a 44.1 kHz stereo, non-interleaved, float format.
- @return An AudioStreamBasicDescription that will be used as the default stream format.
- */
-- (AudioStreamBasicDescription)defaultInputFormat;
 
 //------------------------------------------------------------------------------
 
